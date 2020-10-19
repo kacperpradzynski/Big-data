@@ -9,13 +9,13 @@ def main(args):
         delimiter=',',
         names=["UniqueKey","CreatedDate","ClosedDate","Agency","AgencyName","ComplaintType","Descriptor","LocationType","IncidentZip","IncidentAddress","StreetName","CrossStreet1","CrossStreet2","IntersectionStreet1","IntersectionStreet2","AddressType","City","Landmark","FacilityType","Status","DueDate","ResolutionDescription","ResolutionActionUpdatedDate","CommunityBoard","BBL","Borough","XCoordinate(StatePlane)","YCoordinate(StatePlane)","OpenDataChannelType","ParkFacilityName","ParkBorough","VehicleType","TaxiCompanyBorough","TaxiPickUpLocation","BridgeHighwayName","BridgeHighwayDirection","RoadRamp","BridgeHighwaySegment","Latitude","Longitude","Location"],
         dtype='string',
-        blocksize=128000000 # = 64 Mb chunks
+        blocksize=128000000 # 128Mb chunks
     )
 
     if args['query'] == 0:
         daskjob = dfd.groupby('ComplaintType')['ComplaintType'].count().nlargest(10).compute()
     elif args['query'] == 1:
-        daskjob = dfd.groupby('ComplaintType')['ComplaintType'].count().nlargest(10).compute()
+        daskjob = dfd.groupby(['ComplaintType', 'Borough']).count().reset_index().compute().sort_values(['Borough','UniqueKey'], ascending=[True, False]).drop_duplicates(subset='Borough')[['Borough', 'ComplaintType', 'UniqueKey']]
     elif args['query'] == 2:
         daskjob = dfd.groupby('AgencyName')['AgencyName'].count().nlargest(10).compute()
     else:
