@@ -14,7 +14,6 @@ db_conn = psycopg2.connect(
     password=db_password
 )
 
-
 def create_table(db_cursor):
     print("Creating table")
     db_cursor.execute("""
@@ -96,16 +95,16 @@ if __name__ == '__main__':
     print("Connecting to Database")
     db_cursor = db_conn.cursor()
 
-    # create_table(db_cursor)
+    create_table(db_cursor)
 
-    # csv_file = '311_Service_Requests_from_2010_to_Present.csv'
-    # elapsed_time = import_csv(db_cursor, csv_file)
-    # print("Data loading time: ")
-    # print(elapsed_time)
+    csv_file = '311_Service_Requests_from_2010_to_Present.csv'
+    elapsed_time = import_csv(db_cursor, csv_file)
+    print("Data loading time: ")
+    print(elapsed_time)
 
-    request_1 = 'select "Complaint Type", count("Complaint Type") as ct from service_request group by "Complaint Type" order by ct desc'
-    request_2 = 'select distinct on("Borough") "Borough", "Complaint Type", ct from(select "Borough", "Complaint Type", count("Complaint Type") as ct from service_request group by "Borough", "Complaint Type" order by ct desc) t1 order by "Borough", ct desc'
-    request_3 = 'select "Agency", count("Complaint Type") as ct from service_request group by "Agency" order by ct desc'
+    request_1 = 'select "Complaint Type", count(*) as ct from service_request group by "Complaint Type" order by ct desc'
+    request_2 = 'select distinct on("Borough") "Borough", "Complaint Type", ct from(select "Borough", "Complaint Type", count(*) as ct from service_request group by "Borough", "Complaint Type" order by ct desc) t1 order by "Borough", ct desc'
+    request_3 = 'select "Agency", count(*) as ct from service_request group by "Agency" order by ct desc'
 
     elapsed_time_1, records_1 = execute_request(db_cursor, request_1)
     print("Request time: ", elapsed_time_1)
