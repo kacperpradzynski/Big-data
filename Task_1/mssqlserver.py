@@ -68,11 +68,11 @@ def execute_request(cursor, request):
 
 def main(args):
     if args['query'] == 0:
-        query = 'select "Complaint Type", count("Complaint Type") as ct from service_request group by "Complaint Type" order by ct desc'
+        query = 'select top 10 "Complaint Type", count("Complaint Type") as ct from service_request group by "Complaint Type" order by ct desc'
     elif args['query'] == 1:
-        query = 'select distinct on("Borough") "Borough", "Complaint Type", ct from(select "Borough", "Complaint Type", count("Complaint Type") as ct from service_request group by "Borough", "Complaint Type" order by ct desc) t1 order by "Borough", ct desc'
+        query = 'with cte as (select "Borough", "Complaint Type", count("Complaint Type") as ct from service_request group by "Borough", "Complaint Type") SELECT "Borough", "Complaint Type", ct FROM ( SELECT "Borough", "Complaint Type", ct, ROW_NUMBER() OVER (PARTITION BY "Borough" ORDER BY ct desc) AS rn FROM cte) tmp WHERE rn = 1;'
     elif args['query'] == 2:
-        query = 'select "Agency", count("Complaint Type") as ct from service_request group by "Agency" order by ct desc'
+        query = 'select top 10 "Agency Name", count("Agency Name") as ct from service_request group by "Agency Name" order by ct desc'
     else:
         print("Query number is not valid!")
         return
