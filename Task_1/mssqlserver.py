@@ -1,7 +1,7 @@
 import pyodbc 
 import argparse
 import time
-from dask import dataframe as dd
+import pathlib
 
 
 def create_table(cursor):
@@ -56,7 +56,8 @@ def create_table(cursor):
 
 
 def import_csv(cursor, file_name):
-    print("Data loaded")
+        path = str(pathlib.Path(__file__).parent.absolute()).replace("\\", "\\\\") + "\\\\" + file_name
+        cursor.execute(f"""BULK INSERT service_request FROM '{path}' WITH ( FORMAT='CSV', ROWTERMINATOR = '0x0A');""")
 
 
 def execute_request(cursor, request):
@@ -78,7 +79,7 @@ def main(args):
 
     conn = pyodbc.connect('Driver={SQL Server};'
                       'Server=DESKTOP-QS3OV80;'
-                      'Database=InvoiceManager;'
+                      'Database=BIGDATA1;'
                       'Trusted_Connection=yes;', autocommit = True)
     cursor = conn.cursor()
 
@@ -89,7 +90,6 @@ def main(args):
         print("Initialization: " + "{:.2f}".format(time.time() - start_time) + " seconds")
 
     start_time = time.time()
-    query = 'SELECT * FROM InvoiceManager.dbo.Products'
     execute_request(cursor, query)
     print("Query: " + "{:.2f}".format(time.time() - start_time) + " seconds")
 
