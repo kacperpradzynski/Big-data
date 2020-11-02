@@ -47,6 +47,7 @@ def main(args):
     filename = args['file']
     number_of_recomendations = int(args['numberofusers'])
     start_time = datetime.now()
+    output = args['output']
 
     users = sc.textFile(filename)
     users_friends = users.map(split_data)
@@ -59,10 +60,16 @@ def main(args):
         lambda mf: (mf[0], sort_recommendations(list(mf[1]), number_of_recomendations)))
     user_ids_recs = users_recommendations.filter(lambda recs: recs[0] in [
                                                  924, 8941, 8942, 9019, 9020, 9021, 9022, 9990, 9992, 9993]).sortByKey()
+    # user_ids_recs = users_recommendations.filter(lambda recs: recs[0] in [11]).sortByKey()
     end_time = datetime.now()
     elapsed_time = (end_time - start_time)
     print("Processing time: ", elapsed_time)
-    print("Result:", user_ids_recs.take(10))
+
+    f = open(output, 'w')
+    with open(output, "w", encoding="utf-8") as fo:
+        for identity, friends in user_ids_recs.take(10):
+            fo.write("".join(["%s\t%s" % (identity, ','.join(str(x) for x in friends))]) + "\n")
+    f.close()
 
 
 if __name__ == '__main__':
@@ -71,5 +78,7 @@ if __name__ == '__main__':
                     default="2.txt", help="Input data file")
     ap.add_argument("-n", "--numberofusers", type=int,
                     default=10, help="Number of users")
+    ap.add_argument("-o", "--output", type=str,
+                    default="result.txt", help="Output data file")
     args = vars(ap.parse_args())
     main(args)
