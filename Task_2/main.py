@@ -51,25 +51,34 @@ def main(args):
 
     users = sc.textFile(filename)
     users_friends = users.map(split_data)
-    users_connections = users_friends.flatMap(connect_friends)
-    mutual_friends = users_connections.groupByKey().filter(
+
+    all_users = users_friends.map(lambda x: (x[0], []))
+    users_connections = users_friends.flatMap(connect_friends).groupByKey()
+
+    mutual_friends = users_connections.filter(
         lambda pair: 0 not in pair[1]).map(lambda pair: (pair[0], sum(pair[1])))
-    recommendations = mutual_friends.flatMap(
-        pair_recomendations)
+
+    recommendations = mutual_friends.flatMap(pair_recomendations)
     users_recommendations = recommendations.groupByKey().map(
         lambda mf: (mf[0], sort_recommendations(list(mf[1]), number_of_recomendations)))
-    user_ids_recs = users_recommendations.filter(lambda recs: recs[0] in [
-                                                 924, 8941, 8942, 9019, 9020, 9021, 9022, 9990, 9992, 9993]).sortByKey()
-    # user_ids_recs = users_recommendations.filter(lambda recs: recs[0] in [11]).sortByKey()
+
+    # result = users_recommendations.filter(lambda recs: recs[0] in [
+    #  924, 8941, 8942, 9019, 9020, 9021, 9022, 9990, 9992, 9993]).sortByKey()
+    # result = users_recommendations.filter(lambda recs: recs[0] in [11]).sortByKey()
+
+    result = sc.union([users_recommendations, all_users]
+                      ).reduceByKey(lambda x, y: x+y).sortByKey()
+
     end_time = datetime.now()
     elapsed_time = (end_time - start_time)
     print("Processing time: ", elapsed_time)
 
-    f = open(output, 'w')
     with open(output, "w", encoding="utf-8") as fo:
-        for identity, friends in user_ids_recs.take(10):
-            fo.write("".join(["%s\t%s" % (identity, ','.join(str(x) for x in friends))]) + "\n")
-    f.close()
+        for identity, friends in result.collect():
+            fo.write(
+                "".join(["%s\t%s" % (identity, ','.join(str(x) for x in friends))]) + "\n")
+
+    sc.stop()
 
 
 if __name__ == '__main__':
