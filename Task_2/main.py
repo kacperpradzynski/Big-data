@@ -46,8 +46,9 @@ def sort_recommendations(recs, number_of_recomendations):
 def main(args):
     filename = args['file']
     number_of_recomendations = int(args['numberofusers'])
-    start_time = datetime.now()
     output = args['output']
+
+    start_time = datetime.now()
 
     users = sc.textFile(filename)
     users_friends = users.map(split_data)
@@ -60,7 +61,7 @@ def main(args):
 
     recommendations = mutual_friends.flatMap(pair_recomendations)
     users_recommendations = recommendations.groupByKey().map(
-        lambda mf: (mf[0], sort_recommendations(list(mf[1]), number_of_recomendations)))
+        lambda pair: (pair[0], sort_recommendations(list(pair[1]), number_of_recomendations)))
 
     # result = users_recommendations.filter(lambda recs: recs[0] in [
     #  924, 8941, 8942, 9019, 9020, 9021, 9022, 9990, 9992, 9993]).sortByKey()
@@ -69,15 +70,14 @@ def main(args):
     result = sc.union([users_recommendations, all_users]
                       ).reduceByKey(lambda x, y: x+y).sortByKey()
 
-    end_time = datetime.now()
-    elapsed_time = (end_time - start_time)
-    print("Processing time: ", elapsed_time)
-
     with open(output, "w", encoding="utf-8") as fo:
         for identity, friends in result.collect():
             fo.write(
                 "".join(["%s\t%s" % (identity, ','.join(str(x) for x in friends))]) + "\n")
 
+    end_time = datetime.now()
+    elapsed_time = (end_time - start_time)
+    print("Processing time: ", elapsed_time)
     sc.stop()
 
 
