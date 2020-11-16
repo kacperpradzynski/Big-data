@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 
 from math import sqrt
 from statistics import mean
@@ -42,7 +43,7 @@ def calculate_centroids(cluster):
     global centroids_list
     centroid_idx = cluster[0]
     points = list(cluster[1])
-    new_centroid = list(map(mean, zip(*points)))  # sum(points) / len(points)
+    new_centroid = list(map(mean, zip(*points)))
     return (centroid_idx, new_centroid)
 
 
@@ -85,14 +86,16 @@ def main(args):
     iteration_cost = costs.reduce(lambda x, y: x+y)
     iteration_costs.append(iteration_cost)
 
-    # print(centroids_list)
-    print(iteration_costs)
-    with open("centroids.txt", "w", encoding="utf-8") as fo:
-        for centroid in centroids_list:
-            fo.writelines(["%s," % round(item, 4) for item in centroid])
+    if args['manhattan']:
+        dist = "_m_"
+    else:
+        dist = "_e_"
 
-    with open("costs.txt", "w", encoding="utf-8") as fo:
+    with open("costs"+dist+centroids_file, "w", encoding="utf-8") as fo:
         fo.writelines(["%s\n" % item for item in iteration_costs])
+
+    plt.plot(iteration_costs)
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -100,9 +103,9 @@ if __name__ == '__main__':
     ap.add_argument("-f", "--file", type=str,
                     default="3a.txt", help="Input data file")
     ap.add_argument("-c", "--centroids", type=str,
-                    default="3b.txt", help="Centroids file")    
+                    default="3b.txt", help="Centroids file")
     ap.add_argument("-i", "--iterations", type=int,
-                    default=20, help="Number of iterations")   
+                    default=20, help="Number of iterations")
     ap.add_argument("-m", "--manhattan", action='store_true',
                     help="Manhattan distance (Default Euclidean)")
     args = vars(ap.parse_args())
